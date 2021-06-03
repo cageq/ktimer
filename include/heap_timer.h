@@ -38,7 +38,7 @@ struct TimerNode{
 using TimerNodePtr = std::shared_ptr<TimerNode> ; 
 
 struct CompareTimeNode {
-	bool operator () (const TimerNodePtr  node ,  const TimerNodePtr other ){
+	bool operator () (const TimerNodePtr  & node ,  const TimerNodePtr & other ){
 		return node->expire_time < other->expire_time; 
 	}
 }; 
@@ -108,10 +108,10 @@ class HeapTimer{
 				TimerNodePtr  node = nullptr; 
 				std::tie(hasTop, node)  = heap_tree.top(); 
 				while (hasTop &&  node->expire_time <= cur) {
+					heap_tree.pop(); 
 					if (!node->stopped ) {
 						handle_timeout(node); 
 					}
-					heap_tree.pop(); 
 					std::tie(hasTop, node)  = heap_tree.top(); 
 					cur = TimerNode::get_now(); 
 				}
@@ -124,7 +124,6 @@ class HeapTimer{
 				} else {
 					std::this_thread::sleep_for(std::chrono::microseconds(100));
 				}
-
 			}
 		}
 
