@@ -1,7 +1,6 @@
 #pragma once 
 #include "min_heap.h"
 #include <functional> 
-#include <unordered_map> 
 #include <time.h> 
 #include <chrono> 
 #include <thread> 
@@ -37,6 +36,7 @@ struct TimerNode{
 	bool loop  = true; 
 	bool stopped = false; 
 }; 
+
 struct CompareTimeNode {
 	bool operator () (const TimerNode *  node ,  const TimerNode * other ){
 		return node->expire_time < other->expire_time; 
@@ -45,7 +45,8 @@ struct CompareTimeNode {
 
 template <class T> 
 struct UserTimerNode : public TimerNode{
-
+	virtual ~UserTimerNode(){
+	}	
 	UserTimerNode(int32_t t , const TimerHandler & h, bool l = true   ):TimerNode(t, h, l)  {
 	}
 	T user_data ; 
@@ -64,7 +65,6 @@ class HeapTimer{
 				return add_timer(node ); 
 			}
 		uint32_t start_timer(uint32_t interval , const TimerHandler & handler , bool loop = true){
-
 			auto node = new TimerNode(interval, handler, loop ); 
 			return add_timer(node ); 
 		}
@@ -73,7 +73,6 @@ class HeapTimer{
 			static uint32_t timer_index = base_timer_index ; 
 			node->timerid = timer_index ++ ; 
 			heap_tree.insert(node); 
-			user_timers[timer_index  ] = node ; 
 			return node->timerid; 
 
 		}
@@ -132,7 +131,6 @@ class HeapTimer{
 
 	private: 
 		std::thread work_thread; 
-		std::unordered_map<uint32_t , TimerNode * >  user_timers; 
 		MinHeap<TimerNode * , CompareTimeNode >  heap_tree; 
 		bool is_running = false; 
 }; 
