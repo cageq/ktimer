@@ -112,9 +112,7 @@ class HeapTimer{
 					if (!node->stopped ) {
 						handle_timeout(node); 
 						heap_tree.dump([](uint32_t idx, TimerNodePtr node ){
-
-								printf(" %d [ %ld , %ld ] ",idx, node->timer_id, node->expire_time);  
-
+								printf(" %d [ %u , %ld ] ",idx, node->timer_id, node->expire_time);  
 								}); 
 						printf("\n"); 
 					}
