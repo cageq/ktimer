@@ -14,7 +14,7 @@ class MinHeap {
 		explicit  MinHeap(uint32_t maxSize = 1024) {}
 		inline size_t size() { return heap_data.size(); } 
 		inline bool empty() { return heap_data.empty(); }
-		void insert(const T& item) { heap_data.push_back(item); }
+		void insert(const T& item) { heap_data.push_back(item); sift_up(heap_data.size()-1);  }
 
 		void dump( std::function<void(uint32_t , T ) > output){
 

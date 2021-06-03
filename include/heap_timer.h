@@ -111,7 +111,14 @@ class HeapTimer{
 					heap_tree.pop(); 
 					if (!node->stopped ) {
 						handle_timeout(node); 
+						heap_tree.dump([](uint32_t idx, TimerNodePtr node ){
+
+								printf(" %d [ %ld , %ld ] ",idx, node->timer_id, node->expire_time);  
+
+								}); 
+						printf("\n"); 
 					}
+
 					std::tie(hasTop, node)  = heap_tree.top(); 
 					cur = TimerNode::get_now(); 
 				}
