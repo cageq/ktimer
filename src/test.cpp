@@ -2,9 +2,12 @@
 #include "heap_timer.h" 
 #include <iostream> 
 
-void handle_timeout(){
+bool handle_timeout(TimerNodePtr node ){
 
-	printf("handle timeout2222 \n"); 
+
+	std::cout << "handle timeout 222 " << std::endl; 
+
+	return true; 
 }
 
 int main(int argc, char * argv[]){
@@ -14,17 +17,15 @@ int main(int argc, char * argv[]){
 
 
 
-	heapTimer.start_timer(3, [](TimerNode * node ){
-
+	heapTimer.start_timer(3, [](TimerNodePtr node ){
 			auto unode = node->get_user_node<UserTimerNode<int>  > (); 
 			std::cout << " handle timeout  " << std::time(0) << std::endl ; 
 			std::cout << "user data is  " << unode->user_data << std::endl ; 
-
 			return true; 
 
 			}, true , 3333); 
 
-	//heapTimer.start_timer(2, handle_timeout); 
+	heapTimer.start_timer(2, handle_timeout); 
 
 	heapTimer.start(); 
 

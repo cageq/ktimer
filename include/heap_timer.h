@@ -6,12 +6,12 @@
 #include <thread> 
 
 class TimerNode ; 
-using TimerHandler  = std::function<bool (TimerNode * )> ; 
+using TimerHandler  = std::function<bool (std::shared_ptr<TimerNode >  )> ; 
 
 //using TimePoint =  std::chrono::time_point<std::chrono::system_clock>; 
 using TimePoint = time_t; 
 struct TimerNode{
-	TimerNode(){ } 
+	TimerNode(){} 
 	TimerNode(int32_t t , const TimerHandler & h, bool l = true   ) {
 		handler = h ; 
 		interval = t; 
@@ -28,16 +28,17 @@ struct TimerNode{
 		//std::chrono::system_clock::now();
 		return time(0); 
 	}
-	uint32_t timerid  = 0; 
+	uint32_t timer_id     = 0; 
 	TimerHandler  handler = nullptr ; 
 	int32_t  interval     = 0; 
-	TimePoint  expire_time  ; 
-	bool loop  = true; 
-	bool stopped = false; 
+	bool loop             = true; 
+	bool stopped          = false; 
+	TimePoint    expire_time  ; 
 }; 
+using TimerNodePtr = std::shared_ptr<TimerNode> ; 
 
 struct CompareTimeNode {
-	bool operator () (const TimerNode *  node ,  const TimerNode * other ){
+	bool operator () (const TimerNodePtr  node ,  const TimerNodePtr other ){
 		return node->expire_time < other->expire_time; 
 	}
 }; 
@@ -59,33 +60,25 @@ class HeapTimer{
 
 		template <class T> 
 			uint32_t start_timer(uint32_t interval , const TimerHandler & handler , bool loop , const T & udata ){
-				auto node = new UserTimerNode<T> (interval, handler, loop ); 
+				auto node = std::make_shared<UserTimerNode<T> > (interval, handler, loop ); 
 				node->user_data = udata; 
 				return add_timer(node ); 
 			}
+
 		uint32_t start_timer(uint32_t interval , const TimerHandler & handler , bool loop = true){
-			auto node = new TimerNode(interval, handler, loop ); 
+			auto node = std::make_shared<TimerNode>(interval, handler, loop ); 
 			return add_timer(node ); 
 		}
 
-		uint32_t add_timer(TimerNode * node ){
-			static uint32_t timer_index = base_timer_index ; 
-			node->timerid = timer_index ++ ; 
-			heap_tree.insert(node); 
-			return node->timerid; 
-
-		}
-
-		void handle_timeout(TimerNode* node ) {
+		void handle_timeout(TimerNodePtr node ) {
 			bool rst = node->handler(node ); 
 			if ( rst ) {
-				if (node->loop){
+				if (node->loop && !node->stopped){
 					node->expire_time += node->interval; 
 					heap_tree.insert(node); 
 				}
 			}else {
 				node->stopped = true; 
-				delete node; 
 			}
 
 		}
@@ -101,12 +94,18 @@ class HeapTimer{
 		}
 
 	private: 
+		uint32_t add_timer(TimerNodePtr    node ){
+			static uint32_t timer_index = base_timer_index ; 
+			node->timer_id = timer_index ++ ; 
+			heap_tree.insert(node); 
+			return node->timer_id; 
+		}
 		void run() {
 
 			while(is_running){
 				auto cur = TimerNode::get_now(); 
 				bool hasTop = false; 
-				TimerNode *  node = nullptr; 
+				TimerNodePtr  node = nullptr; 
 				std::tie(hasTop, node)  = heap_tree.top(); 
 				while (hasTop &&  node->expire_time <= cur) {
 					if (!node->stopped ) {
@@ -129,9 +128,8 @@ class HeapTimer{
 			}
 		}
 
-	private: 
 		std::thread work_thread; 
-		MinHeap<TimerNode * , CompareTimeNode >  heap_tree; 
+		MinHeap<TimerNodePtr , CompareTimeNode >  heap_tree; 
 		bool is_running = false; 
 }; 
 
