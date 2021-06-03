@@ -13,7 +13,6 @@ using TimePoint = time_t;
 struct TimerNode{
 	TimerNode(){ } 
 	TimerNode(int32_t t , const TimerHandler & h, bool l = true   ) {
-
 		handler = h ; 
 		interval = t; 
 		loop =l ; 
@@ -59,7 +58,7 @@ class HeapTimer{
 		const uint32_t base_timer_index = 1024; 
 
 		template <class T> 
-		uint32_t start_timer(uint32_t interval , const TimerHandler & handler , bool loop , const T & udata ){
+			uint32_t start_timer(uint32_t interval , const TimerHandler & handler , bool loop , const T & udata ){
 				auto node = new UserTimerNode<T> (interval, handler, loop ); 
 				node->user_data = udata; 
 				return add_timer(node ); 
@@ -85,6 +84,7 @@ class HeapTimer{
 					heap_tree.insert(node); 
 				}
 			}else {
+				node->stopped = true; 
 				delete node; 
 			}
 
