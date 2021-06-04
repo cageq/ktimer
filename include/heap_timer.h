@@ -29,10 +29,14 @@ struct TimeUnit<std::chrono::seconds>{
 	constexpr static const char * short_notion = "s"; 
 }; 
 
+inline 	static 	TimePoint get_now(){
+	return std::chrono::system_clock::now();
+}
+
 
 template <class TimeScale> 
 struct TimerNode{
-	using TimerHandler  = std::function<bool ( )> ; 
+	using TimerHandler  = std::function<bool ()> ; 
 	using TimerNodePtr = std::shared_ptr<TimerNode<TimeScale> > ; 
 
 	TimerNode(){} 
@@ -43,26 +47,17 @@ struct TimerNode{
 		expire_time =   get_now() + TimeScale(t)  ; 
 	}
 
-	template < class T> 
-		T * get_user_node(){
-			return static_cast<T*>(this); 
-		}
-
-	static 	TimePoint get_now(){
-		return std::chrono::system_clock::now();
-	}
-
 	uint32_t timer_id     = 0; 
 	TimerHandler  handler = nullptr ; 
 	int32_t  interval     = 0; 
 	bool loop             = true; 
 	bool stopped          = false; 
-	TimePoint    expire_time  ; 
+	TimePoint    		  expire_time  ; 
 }; 
 
 template <class TimeScale>
 struct CompareTimerNode {
-	bool operator () (const typename TimerNode<TimeScale>::TimerNodePtr  & node ,  const typename TimerNode<TimeScale>::TimerNodePtr & other ){
+	bool operator () (const typename TimerNode<TimeScale>::TimerNodePtr  & node ,const typename TimerNode<TimeScale>::TimerNodePtr & other ){
 		return node->expire_time < other->expire_time; 
 	}
 }; 
@@ -110,8 +105,7 @@ class HeapTimer{
 			timer_start_point  = std::chrono::system_clock::now();
 			if (async) {
 				work_thread = std::thread(&HeapTimer::run, this); 
-			}
-			else {
+			} else {
 				run(); 
 			}
 		}
@@ -136,7 +130,7 @@ class HeapTimer{
 		void run() {
 
 			while(is_running){
-				auto cur = TimerNode<TimeScale>::get_now(); 
+				auto cur = get_now(); 
 				bool hasTop = false; 
 				TimerNodePtr  node = nullptr; 
 				std::tie(hasTop, node)  = heap_tree.top(); 
@@ -152,7 +146,7 @@ class HeapTimer{
 						//printf("\n"); 
 					}
 					std::tie(hasTop, node)  = heap_tree.top(); 
-					cur = TimerNode<TimeScale>::get_now(); 
+					cur = get_now(); 
 				}
 
 				if (node ) {
