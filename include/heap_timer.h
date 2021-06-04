@@ -32,7 +32,7 @@ struct TimeUnit<std::chrono::seconds>{
 
 template <class TimeScale> 
 struct TimerNode{
-	using TimerHandler  = std::function<bool (std::shared_ptr<TimerNode<TimeScale>  >  )> ; 
+	using TimerHandler  = std::function<bool ( )> ; 
 	using TimerNodePtr = std::shared_ptr<TimerNode<TimeScale> > ; 
 
 	TimerNode(){} 
@@ -92,7 +92,7 @@ class HeapTimer{
 
 
 		void handle_timeout(TimerNodePtr node ) {
-			bool rst = node->handler(node ); 
+			bool rst = node->handler(); 
 			if ( rst ) {
 				if (node->loop && !node->stopped){
 					node->expire_time += TimeScale(node->interval); 
