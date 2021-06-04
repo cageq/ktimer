@@ -33,10 +33,10 @@ inline 	static 	TimePoint get_now(){
 	return std::chrono::system_clock::now();
 }
 
+using TimerHandler  = std::function<bool ()> ; 
 
 template <class TimeScale> 
 struct TimerNode{
-	using TimerHandler  = std::function<bool ()> ; 
 	using TimerNodePtr = std::shared_ptr<TimerNode<TimeScale> > ; 
 
 	TimerNode(){} 
@@ -67,7 +67,6 @@ class HeapTimer{
 
 	public: 
 		using TimerNodePtr = typename TimerNode<TimeScale>::TimerNodePtr; 
-		using TimerHandler = typename TimerNode<TimeScale>::TimerHandler; 
 
 		uint32_t start_timer(uint32_t interval , const TimerHandler & handler , bool loop = true){
 			auto node = std::make_shared<TimerNode<TimeScale> >(interval, handler, loop ); 
