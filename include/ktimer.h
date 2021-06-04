@@ -111,7 +111,9 @@ namespace ktimer{
 
 				void stop(){
 					is_running = false; 
-					work_thread.join(); 
+					if(work_thread.joinable()){
+						work_thread.join(); 
+					}
 				}
 
 			private: 
