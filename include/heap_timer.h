@@ -84,7 +84,6 @@ class HeapTimer{
 		void start( bool async = false){ 
 			is_running = true; 
 			if (async) {
-				//TODO need lock 
 				work_thread = std::thread(&HeapTimer::run, this); 
 			}
 			else {
@@ -93,6 +92,7 @@ class HeapTimer{
 		}
 		void stop(){
 			is_running = false; 
+			work_thread.join(); 
 		}
 
 	private: 
