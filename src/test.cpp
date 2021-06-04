@@ -12,11 +12,11 @@ bool handle_timeout(){
 int main(int argc, char * argv[]){
 
 
-	ktimer::KTimer<>  heapTimer ; 
+	ktimer::KTimer<std::chrono::seconds, std::mutex>  myTimer ; 
 
 
-	heapTimer.start_timer(2, handle_timeout); 
-	heapTimer.start_timer(3, []() {
+	myTimer.start_timer(2, handle_timeout); 
+	myTimer.start_timer(3, []() {
 		   
 		
 		std::cout << "handle timeout 333 " << std::time(0) << std::endl; 
@@ -24,7 +24,7 @@ int main(int argc, char * argv[]){
 		return true; //don't forget to return,   false will stop the timer 
 			}	); 
 
-	heapTimer.start(); 
+	myTimer.start(); 
 
 
 	return 0; 
