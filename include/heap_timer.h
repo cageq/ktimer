@@ -10,7 +10,7 @@ class TimerNode ;
 using TimerHandler  = std::function<bool (std::shared_ptr<TimerNode >  )> ; 
 
 using TimePoint  = std::chrono::time_point<std::chrono::system_clock>; 
-#ifdef TIME_SCALE // should move to template param  
+#ifdef TIME_SCALE //TODO should move to template param  
 using TimeScale  = TIME_SCALE; 
 #else 
 //using TimeScale  = std::chrono::microseconds; 
