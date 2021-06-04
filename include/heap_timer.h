@@ -9,15 +9,42 @@
 class TimerNode ; 
 using TimerHandler  = std::function<bool (std::shared_ptr<TimerNode >  )> ; 
 
-//using TimePoint =  std::chrono::time_point<std::chrono::system_clock>; 
-using TimePoint = time_t; 
+using TimePoint  = std::chrono::time_point<std::chrono::system_clock>; 
+#ifdef TIME_SCALE // should move to template param  
+using TimeScale  = TIME_SCALE; 
+#else 
+//using TimeScale  = std::chrono::microseconds; 
+using TimeScale  = std::chrono::seconds; 
+#endif 
+
+template <class T> 
+struct TimeUnit{
+	constexpr static const char * short_notion = ""; 
+}; 
+
+template <> 
+struct TimeUnit<std::chrono::microseconds>{
+	constexpr static const char * short_notion = "ms"; 
+}; 
+
+template <> 
+struct TimeUnit<std::chrono::milliseconds>{
+	constexpr static const char * short_notion = "us"; 
+}; 
+
+template <> 
+struct TimeUnit<std::chrono::seconds>{
+	constexpr static const char * short_notion = "s"; 
+}; 
+
+
 struct TimerNode{
 	TimerNode(){} 
 	TimerNode(int32_t t , const TimerHandler & h, bool l = true   ) {
-		handler = h ; 
-		interval = t; 
-		loop =l ; 
-		expire_time =   get_now() + t  ; 
+		handler   = h ; 
+		interval  = t; 
+		loop      = l ; 
+		expire_time =   get_now() + TimeScale(t)  ; 
 	}
 
 	template < class T> 
@@ -26,8 +53,7 @@ struct TimerNode{
 		}
 
 	static 	TimePoint get_now(){
-		//std::chrono::system_clock::now();
-		return time(0); 
+		return std::chrono::system_clock::now();
 	}
 	uint32_t timer_id     = 0; 
 	TimerHandler  handler = nullptr ; 
@@ -71,7 +97,6 @@ class HeapTimer{
 		}
 
 		bool stop_timer(uint32_t timerId){
-
 			std::lock_guard<Mutex> guard(timer_mutex); 
 			auto itr = timer_nodes.find(timerId); 
 			if (itr  != timer_nodes.end() ){
@@ -82,11 +107,12 @@ class HeapTimer{
 			return false; 
 		}
 
+
 		void handle_timeout(TimerNodePtr node ) {
 			bool rst = node->handler(node ); 
 			if ( rst ) {
 				if (node->loop && !node->stopped){
-					node->expire_time += node->interval; 
+					node->expire_time += TimeScale(node->interval); 
 					heap_tree.insert(node); 
 				}
 			}else {
@@ -98,6 +124,7 @@ class HeapTimer{
 		}
 		void start( bool async = false){ 
 			is_running = true; 
+			timer_start_point  = std::chrono::system_clock::now();
 			if (async) {
 				work_thread = std::thread(&HeapTimer::run, this); 
 			}
@@ -131,27 +158,29 @@ class HeapTimer{
 					heap_tree.pop(); 
 					if (!node->stopped ) {
 						handle_timeout(node); 
-						heap_tree.dump([](uint32_t idx, TimerNodePtr node ){
-								printf("[%d, %u, %ld] ",idx, node->timer_id, node->expire_time);  
+						heap_tree.dump([this](uint32_t idx, TimerNodePtr node ){
+								printf("[%d, %u, %ld%s] ",idx, node->timer_id,  
+										std::chrono::duration_cast<std::chrono::microseconds>( node->expire_time - timer_start_point  ).count(),
+										TimeUnit<TimeScale>::short_notion  );  
 								}); 
 						printf("\n"); 
 					}
-
 					std::tie(hasTop, node)  = heap_tree.top(); 
 					cur = TimerNode::get_now(); 
 				}
 
 				if (node ) {
-					uint32_t nextExpire = node->expire_time - cur ; 
-					if (nextExpire  > 0 ) {
-						std::this_thread::sleep_for(std::chrono::microseconds(nextExpire * 1000000));
+					auto nextExpire = node->expire_time - cur ; 
+					if (nextExpire  > TimeScale(0) ) {
+						std::this_thread::sleep_for(nextExpire);
 					}
 				} else {
-					std::this_thread::sleep_for(std::chrono::microseconds(100));
+					std::this_thread::sleep_for(TimeScale(1));
 				}
 			}
 		}
 
+		std::chrono::time_point<std::chrono::system_clock> timer_start_point ; 
 		std::thread work_thread; 
 		MinHeap<TimerNodePtr , CompareTimeNode , Mutex>  heap_tree; 
 		bool is_running = false; 

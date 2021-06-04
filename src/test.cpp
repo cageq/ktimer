@@ -1,9 +1,10 @@
 #include <stdio.h> 
-#include "heap_timer.h" 
 #include <iostream> 
 
+//#define TIME_SCALE = std::chrono::seconds 
+#define TIME_SCALE  std::chrono::milliseconds
+#include "heap_timer.h" 
 bool handle_timeout(TimerNodePtr node ){
-
 
 	std::cout << "handle timeout 222 " << std::time(0) << std::endl; 
 
