@@ -92,6 +92,9 @@ class HeapTimer{
 				run(); 
 			}
 		}
+		void stop(){
+			is_running = false; 
+		}
 
 	private: 
 		uint32_t add_timer(TimerNodePtr    node ){
@@ -133,7 +136,7 @@ class HeapTimer{
 		}
 
 		std::thread work_thread; 
-		MinHeap<TimerNodePtr , CompareTimeNode >  heap_tree; 
+		MinHeap<TimerNodePtr , CompareTimeNode , std::mutex>  heap_tree; 
 		bool is_running = false; 
 }; 
 
