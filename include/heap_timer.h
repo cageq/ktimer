@@ -6,16 +6,8 @@
 #include <chrono> 
 #include <thread> 
 
-class TimerNode ; 
-using TimerHandler  = std::function<bool (std::shared_ptr<TimerNode >  )> ; 
 
 using TimePoint  = std::chrono::time_point<std::chrono::system_clock>; 
-#ifdef TIME_SCALE //TODO should move to template param  
-using TimeScale  = TIME_SCALE; 
-#else 
-//using TimeScale  = std::chrono::microseconds; 
-using TimeScale  = std::chrono::seconds; 
-#endif 
 
 template <class T> 
 struct TimeUnit{
@@ -38,7 +30,11 @@ struct TimeUnit<std::chrono::seconds>{
 }; 
 
 
+template <class TimeScale> 
 struct TimerNode{
+	using TimerHandler  = std::function<bool (std::shared_ptr<TimerNode<TimeScale>  >  )> ; 
+	using TimerNodePtr = std::shared_ptr<TimerNode<TimeScale> > ; 
+
 	TimerNode(){} 
 	TimerNode(int32_t t , const TimerHandler & h, bool l = true   ) {
 		handler   = h ; 
@@ -55,6 +51,7 @@ struct TimerNode{
 	static 	TimePoint get_now(){
 		return std::chrono::system_clock::now();
 	}
+
 	uint32_t timer_id     = 0; 
 	TimerHandler  handler = nullptr ; 
 	int32_t  interval     = 0; 
@@ -62,37 +59,23 @@ struct TimerNode{
 	bool stopped          = false; 
 	TimePoint    expire_time  ; 
 }; 
-using TimerNodePtr = std::shared_ptr<TimerNode> ; 
 
-struct CompareTimeNode {
-	bool operator () (const TimerNodePtr  & node ,  const TimerNodePtr & other ){
+template <class TimeScale>
+struct CompareTimerNode {
+	bool operator () (const typename TimerNode<TimeScale>::TimerNodePtr  & node ,  const typename TimerNode<TimeScale>::TimerNodePtr & other ){
 		return node->expire_time < other->expire_time; 
 	}
 }; 
 
-template <class T> 
-struct UserTimerNode : public TimerNode{
-	virtual ~UserTimerNode(){}	
-	UserTimerNode(int32_t t , const TimerHandler & h, bool l = true   ):TimerNode(t, h, l)  {
-	}
-	T user_data ; 
-}; 
-
-template <class Mutex = std::mutex > 
+template <class TimeScale = std::chrono::seconds, class Mutex = std::mutex > 
 class HeapTimer{
 
 	public: 
-		const uint32_t base_timer_index = 1024; 
-
-		template <class T> 
-			uint32_t start_timer(uint32_t interval , const TimerHandler & handler , bool loop , const T & udata ){
-				auto node = std::make_shared<UserTimerNode<T> > (interval, handler, loop ); 
-				node->user_data = udata; 
-				return add_timer(node ); 
-			}
+		using TimerNodePtr = typename TimerNode<TimeScale>::TimerNodePtr; 
+		using TimerHandler = typename TimerNode<TimeScale>::TimerHandler; 
 
 		uint32_t start_timer(uint32_t interval , const TimerHandler & handler , bool loop = true){
-			auto node = std::make_shared<TimerNode>(interval, handler, loop ); 
+			auto node = std::make_shared<TimerNode<TimeScale> >(interval, handler, loop ); 
 			return add_timer(node ); 
 		}
 
@@ -132,13 +115,16 @@ class HeapTimer{
 				run(); 
 			}
 		}
+
 		void stop(){
 			is_running = false; 
 			work_thread.join(); 
 		}
 
 	private: 
-		uint32_t add_timer(TimerNodePtr    node ){
+
+		static const uint32_t base_timer_index = 1024; 
+		uint32_t add_timer(TimerNodePtr node ){
 			static uint32_t timer_index = base_timer_index ; 
 			node->timer_id = timer_index ++ ; 
 			heap_tree.insert(node); 
@@ -150,7 +136,7 @@ class HeapTimer{
 		void run() {
 
 			while(is_running){
-				auto cur = TimerNode::get_now(); 
+				auto cur = TimerNode<TimeScale>::get_now(); 
 				bool hasTop = false; 
 				TimerNodePtr  node = nullptr; 
 				std::tie(hasTop, node)  = heap_tree.top(); 
@@ -166,7 +152,7 @@ class HeapTimer{
 						printf("\n"); 
 					}
 					std::tie(hasTop, node)  = heap_tree.top(); 
-					cur = TimerNode::get_now(); 
+					cur = TimerNode<TimeScale>::get_now(); 
 				}
 
 				if (node ) {
@@ -182,7 +168,7 @@ class HeapTimer{
 
 		std::chrono::time_point<std::chrono::system_clock> timer_start_point ; 
 		std::thread work_thread; 
-		MinHeap<TimerNodePtr , CompareTimeNode , Mutex>  heap_tree; 
+		MinHeap<TimerNodePtr , CompareTimerNode<TimeScale> , Mutex>  heap_tree; 
 		bool is_running = false; 
 		Mutex timer_mutex; 
 		std::unordered_map<uint32_t , TimerNodePtr>  timer_nodes ; 
