@@ -1,7 +1,7 @@
 #include <stdio.h> 
 #include <iostream> 
 
-#include "heap_timer.h" 
+#include "ktimer.h" 
 bool handle_timeout(){
 
 	std::cout << "handle timeout 222 " << std::time(0) << std::endl; 
@@ -12,7 +12,7 @@ bool handle_timeout(){
 int main(int argc, char * argv[]){
 
 
-	HeapTimer<>  heapTimer ; 
+	ktimer::KTimer<>  heapTimer ; 
 
 
 	heapTimer.start_timer(2, handle_timeout); 
