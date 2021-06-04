@@ -45,8 +45,7 @@ struct CompareTimeNode {
 
 template <class T> 
 struct UserTimerNode : public TimerNode{
-	virtual ~UserTimerNode(){
-	}	
+	virtual ~UserTimerNode(){}	
 	UserTimerNode(int32_t t , const TimerHandler & h, bool l = true   ):TimerNode(t, h, l)  {
 	}
 	T user_data ; 
@@ -115,7 +114,7 @@ class HeapTimer{
 					if (!node->stopped ) {
 						handle_timeout(node); 
 						heap_tree.dump([](uint32_t idx, TimerNodePtr node ){
-								printf(" %d [ %u , %ld ] ",idx, node->timer_id, node->expire_time);  
+								printf("[%d, %u, %ld] ",idx, node->timer_id, node->expire_time);  
 								}); 
 						printf("\n"); 
 					}
