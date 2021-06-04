@@ -1,6 +1,7 @@
 #pragma once 
 #include "min_heap.h"
 #include <functional> 
+#include <unordered_map> 
 #include <time.h> 
 #include <chrono> 
 #include <thread> 
@@ -69,6 +70,18 @@ class HeapTimer{
 			return add_timer(node ); 
 		}
 
+		bool stop_timer(uint32_t timerId){
+
+			std::lock_guard<Mutex> guard(timer_mutex); 
+			auto itr = timer_nodes.find(timerId); 
+			if (itr  != timer_nodes.end() ){
+				itr->second->stopped = true; 
+				timer_nodes.erase(itr); 
+				return true; 
+			}
+			return false; 
+		}
+
 		void handle_timeout(TimerNodePtr node ) {
 			bool rst = node->handler(node ); 
 			if ( rst ) {
@@ -77,7 +90,9 @@ class HeapTimer{
 					heap_tree.insert(node); 
 				}
 			}else {
+				std::lock_guard<Mutex> guard(timer_mutex); 
 				node->stopped = true; 
+				timer_nodes.erase(node->timer_id ); 
 			}
 
 		}
@@ -100,6 +115,9 @@ class HeapTimer{
 			static uint32_t timer_index = base_timer_index ; 
 			node->timer_id = timer_index ++ ; 
 			heap_tree.insert(node); 
+
+			std::lock_guard<Mutex> guard(timer_mutex); 
+			timer_nodes[node->timer_id] = node; 
 			return node->timer_id; 
 		}
 		void run() {
@@ -137,6 +155,8 @@ class HeapTimer{
 		std::thread work_thread; 
 		MinHeap<TimerNodePtr , CompareTimeNode , Mutex>  heap_tree; 
 		bool is_running = false; 
+		Mutex timer_mutex; 
+		std::unordered_map<uint32_t , TimerNodePtr>  timer_nodes ; 
 }; 
 
 
