@@ -52,7 +52,7 @@ struct UserTimerNode : public TimerNode{
 	T user_data ; 
 }; 
 
-
+template <class Mutex = std::mutex > 
 class HeapTimer{
 
 	public: 
@@ -136,7 +136,7 @@ class HeapTimer{
 		}
 
 		std::thread work_thread; 
-		MinHeap<TimerNodePtr , CompareTimeNode , std::mutex>  heap_tree; 
+		MinHeap<TimerNodePtr , CompareTimeNode , Mutex>  heap_tree; 
 		bool is_running = false; 
 }; 
 

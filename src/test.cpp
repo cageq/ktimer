@@ -13,7 +13,7 @@ bool handle_timeout(TimerNodePtr node ){
 int main(int argc, char * argv[]){
 
 
-	HeapTimer heapTimer ; 
+	HeapTimer<>  heapTimer ; 
 
 
 	heapTimer.start_timer(2, handle_timeout); 
