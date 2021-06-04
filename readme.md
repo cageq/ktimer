@@ -19,5 +19,6 @@ myTimer.start_timer(3, []() {
 		
 }); 
 
+myTimer.start() ; //start the loop 
 
 ```
