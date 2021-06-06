@@ -58,7 +58,7 @@ namespace ktimer{
 	template <class TimeScale>
 		struct CompareTimerNode {
 			bool operator () (const typename TimerNode<TimeScale>::TimerNodePtr  & node ,const typename TimerNode<TimeScale>::TimerNodePtr & other ){
-				return node->expire_time < other->expire_time; 
+				return node->expire_time > other->expire_time; 
 			}
 		}; 
 
