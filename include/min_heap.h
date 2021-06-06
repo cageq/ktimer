@@ -5,6 +5,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <algorithm>
 struct NoneMutex {
 	inline void lock() {}
 	inline void unlock() {}

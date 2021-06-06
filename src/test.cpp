@@ -24,8 +24,9 @@ int main(int argc, char * argv[]){
 		return true; //don't forget to return,   false will stop the timer 
 			}	); 
 
-	myTimer.start(); 
+	myTimer.start(true); 
 
+	getchar(); 
 
 	return 0; 
 
