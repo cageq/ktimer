@@ -97,8 +97,8 @@ namespace ktimer{
 						node->stopped = true; 
 						timer_nodes.erase(node->timer_id ); 
 					}
-
 				}
+
 				void start( bool async = false){ 
 					is_running = true; 
 					timer_start_point  = std::chrono::system_clock::now();
@@ -140,7 +140,7 @@ namespace ktimer{
 							if (!node->stopped ) {
 								handle_timeout(node); 
 								heap_tree.dump([this](uint32_t idx, TimerNodePtr node ){
-										printf("[%u, %u, %lu%s] ",idx, node->timer_id,  
+										printf("[%u, %u, %llu%s] ",idx, node->timer_id,  
 												std::chrono::duration_cast<std::chrono::microseconds>( node->expire_time - timer_start_point  ).count(),
 												TimeUnit<TimeScale>::short_notion  );  
 										}); 
