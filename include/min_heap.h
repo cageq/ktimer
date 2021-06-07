@@ -28,7 +28,7 @@ class MinHeap {
 			std::lock_guard<Mutex> guard(heap_mutex);
 			heap_data.push_back(item);
 			if (heap_data.size()  > 1) {
-				std::make_heap(heap_data.begin(), heap_data.end(),Compare{}  ); 
+				std::push_heap(heap_data.begin(), heap_data.end(), Compare{}); 
 			}
 		}
 
