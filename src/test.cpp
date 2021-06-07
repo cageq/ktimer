@@ -22,8 +22,12 @@ int main(int argc, char * argv[]){
 		std::cout << "handle timeout 333 " << std::time(0) << std::endl; 
 			
 		return true; //don't forget to return,   false will stop the timer 
-			}	); 
+			}); 
 
+	myTimer.start_timer(5, []() {
+			std::cout << "handle timeout 555 " << std::time(0) << std::endl; 
+return true; 
+			}); 
 	myTimer.start(true); 
 
 	getchar(); 
