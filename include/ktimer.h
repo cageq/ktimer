@@ -67,6 +67,13 @@ namespace ktimer{
 
 			public: 
 				using TimerNodePtr = typename TimerNode<TimeScale>::TimerNodePtr; 
+				~KTimer(){
+
+					if(is_running){
+						this->stop(); 
+					}
+
+				}
 
 				uint32_t start_timer(uint32_t interval , const TimerHandler & handler , bool loop = true){
 					auto node = std::make_shared<TimerNode<TimeScale> >(interval, handler, loop ); 
@@ -111,6 +118,7 @@ namespace ktimer{
 
 				void stop(){
 					is_running = false; 
+					timer_nodes.clear(); 
 					if(work_thread.joinable()){
 						work_thread.join(); 
 					}
@@ -139,12 +147,12 @@ namespace ktimer{
 							heap_tree.pop(); 
 							if (!node->stopped ) {
 								handle_timeout(node); 
-								//heap_tree.dump([this](uint32_t idx, TimerNodePtr node ){
-								//		printf("[%d, %u, %ld%s] ",idx, node->timer_id,  
-								//				std::chrono::duration_cast<std::chrono::microseconds>( node->expire_time - timer_start_point  ).count(),
-								//				TimeUnit<TimeScale>::short_notion  );  
-								//		}); 
-								//printf("\n"); 
+								heap_tree.dump([this](uint32_t idx, TimerNodePtr node ){
+										printf("[%u, %u, %lu%s] ",idx, node->timer_id,  
+												std::chrono::duration_cast<std::chrono::microseconds>( node->expire_time - timer_start_point  ).count(),
+												TimeUnit<TimeScale>::short_notion  );  
+										}); 
+								printf("\n"); 
 							}
 							std::tie(hasTop, node)  = heap_tree.top(); 
 							cur = get_now(); 
