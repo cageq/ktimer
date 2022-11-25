@@ -83,7 +83,21 @@ namespace ktimer{
 					}
 					return false; 
 				}
-
+			
+				bool restart_timer(uint32_t timerId){
+					std::lock_guard<Mutex> guard(timer_mutex); 
+					auto itr = timer_nodes.find(timerId); 
+					if (itr  != timer_nodes.end() ){
+						itr->second->stopped = true; 
+						
+						auto node = std::make_shared<TimerNode<TimeScale> >(itr->second->interval, itr->second->handler, itr->second->loop ); 
+						timer_nodes.erase(itr); 
+						heap_tree.insert(node); 		 
+						timer_nodes[node->timer_id] = node; 
+						return true; 
+					}
+					return false; 
+				}
 
 				void handle_timeout(TimerNodePtr node ) {
 					bool rst = node->handler(); 
