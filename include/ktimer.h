@@ -83,14 +83,14 @@ namespace ktimer{
 					}
 					return false; 
 				}
-			
-				bool restart_timer(uint32_t timerId){
+			        
+			        bool restart_timer(uint32_t timerId , uint32_t interval = 0 ){
 					std::lock_guard<Mutex> guard(timer_mutex); 
 					auto itr = timer_nodes.find(timerId); 
 					if (itr  != timer_nodes.end() ){
 						itr->second->stopped = true; 
 						
-						auto node = std::make_shared<TimerNode<TimeScale> >(itr->second->interval, itr->second->handler, itr->second->loop ); 
+						auto node = std::make_shared<TimerNode<TimeScale> >(interval >0 ?interval: itr->second->interval, itr->second->handler, itr->second->loop ); 
 						timer_nodes.erase(itr); 
 						heap_tree.insert(node); 		 
 						timer_nodes[node->timer_id] = node; 
@@ -98,6 +98,7 @@ namespace ktimer{
 					}
 					return false; 
 				}
+
 
 				void handle_timeout(TimerNodePtr node ) {
 					bool rst = node->handler(); 
