@@ -5,6 +5,7 @@
 #include <time.h> 
 #include <chrono> 
 #include <thread> 
+#include <memory> 
 
 namespace ktimer{
 	using TimePoint  = std::chrono::time_point<std::chrono::system_clock>; 
